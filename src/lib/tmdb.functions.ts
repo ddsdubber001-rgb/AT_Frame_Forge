@@ -18,11 +18,11 @@ export const searchTmdb = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     try {
       const j = await tmdb(`/search/multi?include_adult=false&query=${encodeURIComponent(data.query)}`);
-      if (!j) return { configured: false, results: [] as Json[], error: null as string | null };
+      if (!j) return { configured: false, json: "[]", error: null as string | null };
       const results = ((j["results"] as Json[]) ?? []).filter((r) => r["media_type"] === "movie" || r["media_type"] === "tv").slice(0, 8);
-      return { configured: true, results, error: null };
+      return { configured: true, json: JSON.stringify(results), error: null as string | null };
     } catch (e) {
-      return { configured: true, results: [] as Json[], error: (e as Error).message };
+      return { configured: true, json: "[]", error: (e as Error).message as string | null };
     }
   });
 
@@ -31,8 +31,8 @@ export const tmdbDetails = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     try {
       const j = await tmdb(`/${data.kind}/${data.id}?append_to_response=${data.kind === "tv" ? "content_ratings" : "release_dates"}`);
-      return { details: j, error: j ? null : "TMDB is not configured" };
+      return { json: j ? JSON.stringify(j) : null, error: j ? null : "TMDB is not configured" };
     } catch (e) {
-      return { details: null as Json | null, error: (e as Error).message };
+      return { json: null as string | null, error: (e as Error).message as string | null };
     }
   });

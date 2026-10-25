@@ -117,7 +117,7 @@ export function LayersSection({ project, set, selectedId, onSelect }: { project:
         return (
           <div className="flex flex-wrap gap-1.5">
             {l.kind !== "image" && <button className="btn" onClick={() => { const d = duplicateLayer(l); setLayers((ls) => [...ls, d]); onSelect(d.id); }}><Copy className="h-3.5 w-3.5" />Duplicate</button>}
-            <button className="btn" onClick={() => l.defaults && patch(l.id, { x: l.defaults.x, y: l.defaults.y, w: l.defaults.w, h: l.defaults.h, rotation: 0 })}><RotateCcw className="h-3.5 w-3.5" />Reset position</button>
+            <button className="btn" onClick={() => l.defaults && patch(l.id, { x: l.defaults.x ?? l.x, y: l.defaults.y ?? l.y, w: l.defaults.w ?? l.w, h: l.defaults.h ?? l.h, rotation: 0 })}><RotateCcw className="h-3.5 w-3.5" />Reset position</button>
             {l.removable && <button className="btn btn-danger" onClick={() => { setLayers((ls) => ls.filter((x) => x.id !== l.id)); onSelect(null); }}><Trash2 className="h-3.5 w-3.5" />Delete</button>}
           </div>
         );

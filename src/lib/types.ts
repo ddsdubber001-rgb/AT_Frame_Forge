@@ -50,5 +50,5 @@ export interface Project {
   image: string | null; imageW: number; imageH: number;
   meta: Meta; templateId: string; layersByTemplate: Record<string, Layer[]>;
   palette: Palette; paletteName: string; canvas: { w: number; h: number };
-  exportPrefs: ExportPrefs; thumbnail?: string;
+  exportPrefs: ExportPrefs; thumbnail?: string | undefined;
 }

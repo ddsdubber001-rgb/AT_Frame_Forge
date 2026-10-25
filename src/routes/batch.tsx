@@ -27,7 +27,7 @@ export const Route = createFileRoute("/batch")({
 });
 
 type Status = "pending" | "searching" | "ready" | "failed";
-interface Item { id: string; project: Project; title: string; status: Status; error?: string; results: SearchResult[]; thumb?: string }
+interface Item { id: string; project: Project; title: string; status: Status; error?: string | undefined; results: SearchResult[]; thumb?: string | undefined }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 

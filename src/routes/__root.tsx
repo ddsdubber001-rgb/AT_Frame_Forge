@@ -78,16 +78,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
+      { title: "AT Frame Forge" },
+      { name: "description", content: "Cinematic anime and movie poster studio." },
+      { name: "theme-color", content: "#0b0f19" },
     ],
     links: [
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cinzel:wght@700&family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;700;900&family=Noto+Sans+Tamil:wght@400;700;900&family=Noto+Sans:ital,wght@0,400;0,600;0,700;0,900;1,400&family=Noto+Serif+JP:wght@700&family=Oswald:wght@400;600;700&family=Playfair+Display:ital,wght@0,700;1,400&family=Sora:wght@400;600;700;800&display=swap",
+      },
       {
         rel: "stylesheet",
         href: appCss,

@@ -14,13 +14,92 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      forge_admin: {
+        Row: {
+          created_at: string
+          id: string
+          password_hash: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          password_hash: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          password_hash?: string
+        }
+        Relationships: []
+      }
+      forge_admin_profile: {
+        Row: {
+          display_name: string
+          id: string
+          preferences: Json
+        }
+        Insert: {
+          display_name?: string
+          id: string
+          preferences?: Json
+        }
+        Update: {
+          display_name?: string
+          id?: string
+          preferences?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forge_admin_profile_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "forge_admin"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      forge_integrations: {
+        Row: {
+          enabled: boolean
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          enabled: boolean
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          enabled?: boolean
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      forge_login_limits: {
+        Row: {
+          attempts: number
+          id: string
+          window_start: string
+        }
+        Insert: {
+          attempts?: number
+          id: string
+          window_start?: string
+        }
+        Update: {
+          attempts?: number
+          id?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      forge_consume_login: { Args: { bucket: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

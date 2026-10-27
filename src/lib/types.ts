@@ -37,6 +37,7 @@ export interface Layer {
   // text
   text?: string; font?: string; size?: number; weight?: number; italic?: boolean; color?: string;
   align?: "left" | "center" | "right"; letterSpacing?: number; lineHeight?: number; wrap?: boolean;
+  autoFit?: boolean;
   uppercase?: boolean; shadow?: number; shadowColor?: string; outline?: number; outlineColor?: string;
   glow?: number; glowColor?: string; gradientTo?: string | null; highlight?: string | null;
   defaults?: Partial<Layer>;

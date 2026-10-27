@@ -1,5 +1,5 @@
 import { DEFAULT_PALETTE } from "./palette";
-import { getTemplate, uid } from "./templates";
+import { getTemplate, logoLayer, uid } from "./templates";
 import { emptyMeta, type Layer, type Project } from "./types";
 
 export const CANVAS_PRESETS = [
@@ -22,7 +22,8 @@ export function newProject(name = "Untitled poster"): Project {
 }
 
 export function getLayers(p: Project): Layer[] {
-  return p.layersByTemplate[p.templateId] ?? getTemplate(p.templateId).build(p.canvas);
+  const layers = p.layersByTemplate[p.templateId] ?? getTemplate(p.templateId).build(p.canvas);
+  return layers.some(l => l.role === 'logo') ? layers : [...layers, logoLayer(p.canvas)];
 }
 
 export function withTemplate(p: Project, templateId: string): Project {
@@ -35,7 +36,7 @@ export function withCanvas(p: Project, w: number, h: number): Project {
   const portrait = h >= w;
   return {
     ...p, canvas: { w, h },
-    layersByTemplate: { [p.templateId]: getTemplate(p.templateId).build({ w, h }) },
+    layersByTemplate: { ...p.layersByTemplate, [p.templateId]: getTemplate(p.templateId).build({ w, h }) },
     exportPrefs: { ...p.exportPrefs, w: portrait ? Math.round((3840 * w) / h) : 3840, h: portrait ? 3840 : Math.round((3840 * h) / w) },
   };
 }

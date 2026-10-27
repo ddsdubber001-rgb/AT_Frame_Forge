@@ -1,4 +1,6 @@
 import type { Layer, Meta, Palette } from "./types";
+import { loadLogo } from './logo';
+let logo: HTMLImageElement | null = null;
 
 /** Single renderer used by the live preview, thumbnails, batch and final export. */
 
@@ -39,6 +41,7 @@ export const fontString = (l: Layer, px: number) =>
 
 export async function ensureFonts(layers: Layer[], meta: Meta) {
   if (typeof document === "undefined" || !document.fonts) return;
+  logo = await loadLogo();
   const jobs: Promise<unknown>[] = [];
   for (const l of layers) {
     if (l.kind !== "text") continue;
@@ -152,7 +155,7 @@ export function renderPoster(
       ctx.rotate((l.rotation * Math.PI) / 180);
       ctx.translate(-(bx + bw / 2), -(by + bh / 2));
     }
-    if (l.kind === "image") drawImageLayer(ctx, l, bx, by, bw, bh, H, art, pal);
+    if (l.kind === "image") drawImageLayer(ctx, l, bx, by, bw, bh, H, l.role === 'logo' ? logo : art, pal);
     else if (l.kind === "rect") drawRect(ctx, l, bx, by, bw, bh, H, pal);
     else drawText(ctx, l, bx, by, bw, bh, H, resolveText(l.text ?? "", meta) ?? "", pal);
     ctx.restore();
@@ -161,6 +164,13 @@ export function renderPoster(
 }
 
 function drawImageLayer(ctx: CanvasRenderingContext2D, l: Layer, x: number, y: number, w: number, h: number, H: number, art: HTMLImageElement | null, pal: Palette) {
+  if (l.role === 'logo') {
+    const d = Math.min(w,h);
+    ctx.beginPath(); ctx.arc(x+d/2,y+d/2,d/2,0,Math.PI*2); ctx.clip();
+    ctx.fillStyle = pal.text; ctx.fillRect(x,y,d,d);
+    if (art) ctx.drawImage(art,x+d*0.1,y+d*0.1,d*0.8,d*0.8);
+    return;
+  }
   roundRect(ctx, x, y, w, h, (l.radius ?? 0) * H);
   ctx.clip();
   if (!art) { ctx.fillStyle = pal.surface; ctx.fillRect(x, y, w, h); return; }
@@ -191,7 +201,29 @@ function drawRect(ctx: CanvasRenderingContext2D, l: Layer, x: number, y: number,
 }
 
 function drawText(ctx: CanvasRenderingContext2D, l: Layer, x: number, y: number, w: number, h: number, H: number, raw: string, pal: Palette) {
-  const px = Math.max(1, (l.size ?? 0.03) * H);
+  if (l.role === 'genre-tags') {
+    const px = Math.max(1,(l.size ?? 0.025)*H); ctx.font=fontString(l,px); setLetterSpacing(ctx,0);
+    let tx=x, ty=y;
+    for (const tag of raw.split(',').map(t=>t.trim()).filter(Boolean)) {
+      const tw = Math.min(w,ctx.measureText(tag).width+px*1.3), th=px*1.65;
+      if(tx+tw>x+w){tx=x;ty+=th+px*0.25;} if(ty+th>y+h) break;
+      ctx.fillStyle=resolveColor(l.highlight,pal); roundRect(ctx,tx,ty,tw,th,th/2);ctx.fill();
+      ctx.strokeStyle=resolveColor('@text/0.25',pal);ctx.lineWidth=Math.max(0.5,H*0.001);ctx.stroke();
+      ctx.fillStyle=resolveColor(l.color,pal);ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(ellipsize(ctx,tag,tw-px*0.8),tx+px*0.5,ty+th/2);
+      tx+=tw+px*0.4;
+    }
+    return;
+  }
+  let px = Math.max(1, (l.size ?? 0.03) * H);
+  if(l.autoFit) {
+    const minimum=px*0.35;
+    while(px>minimum) {
+      ctx.font=fontString(l,px); setLetterSpacing(ctx,(l.letterSpacing??0)*px);
+      const lines=l.wrap===false?raw.split('\n'):wrapText(ctx,raw,w);
+      if(lines.length*px*(l.lineHeight??1.2)<=h && lines.every(line=>ctx.measureText(line).width<=w)) break;
+      px*=0.95;
+    }
+  }
   ctx.font = fontString(l, px);
   setLetterSpacing(ctx, (l.letterSpacing ?? 0) * px);
   const text = l.uppercase ? raw.toLocaleUpperCase() : raw;

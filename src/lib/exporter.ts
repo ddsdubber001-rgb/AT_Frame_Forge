@@ -27,12 +27,18 @@ async function renderCanvas(project: Project, w: number, h: number, transparent 
   c.width = Math.round(w); c.height = Math.round(h);
   const ctx = c.getContext("2d");
   if (!ctx) throw new Error("Canvas is not available in this browser");
-  renderPoster(ctx, c.width, c.height, layers, project.meta, project.palette, art, { transparent });
+  // Contain the exact preview composition when export and canvas aspects differ.
+  const scale = Math.min(c.width/project.canvas.w,c.height/project.canvas.h);
+  ctx.fillStyle=project.palette.bg;
+  if(!transparent) ctx.fillRect(0,0,c.width,c.height);
+  ctx.translate((c.width-project.canvas.w*scale)/2,(c.height-project.canvas.h*scale)/2);
+  ctx.scale(scale,scale);
+  renderPoster(ctx, project.canvas.w, project.canvas.h, layers, project.meta, project.palette, art, { transparent });
   return c;
 }
 
 export async function exportPoster(project: Project, w: number, h: number, format: ExportFormat, quality = 0.92, transparent = false): Promise<Blob> {
-  if (w < 64 || h < 64 || w > 8192 || h > 8192) throw new Error("Size must be between 64 and 8192 px");
+  if (!Number.isInteger(w) || !Number.isInteger(h) || w < 64 || h < 64 || w > 8192 || h > 8192) throw new Error("Size must be whole pixels between 64 and 8192 px");
   const c = await renderCanvas(project, w, h, transparent && format !== "jpeg");
   const type = `image/${format}`;
   const blob = await new Promise<Blob | null>((r) => c.toBlob(r, type, quality));

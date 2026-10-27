@@ -43,7 +43,7 @@ function Dashboard() {
     <div className="hero-bg min-h-screen">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
         <Brand />
-        <Link to="/batch" className="btn"><Layers className="h-4 w-4" />Batch</Link>
+        <nav className="flex gap-2"><Link to="/admin" className="btn btn-ghost">Admin</Link><Link to="/batch" className="btn"><Layers className="h-4 w-4" />Batch</Link></nav>
       </header>
       <main className="mx-auto max-w-6xl px-4 pb-16 sm:px-6">
         <section className="py-10 sm:py-16">

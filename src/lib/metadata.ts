@@ -1,5 +1,7 @@
 import { searchTmdb, tmdbDetails } from "./tmdb.functions";
 import { emptyMeta, type Meta } from "./types";
+import { enabledProviders } from './admin.functions';
+import { searchOmdb } from './omdb.functions';
 
 /** Metadata service: AniList + Jikan (anime, public) and TMDB (movies/TV, server-side key). */
 
@@ -73,7 +75,7 @@ async function jikan(q: string): Promise<SearchResult[]> {
     meta.status = a["status"] ?? "";
     meta.synopsis = (a["synopsis"] ?? "").replace(/\[Written by MAL Rewrite\]/g, "").trim();
     meta.studio = (a["studios"] ?? []).map((s: J) => s["name"]).join(", ");
-    meta.ageRating = a["rating"] ? String(a["rating"]).split(" - ")[0]! : "";
+    meta.ageRating = a["rating"] ? String(a["rating"]).split(" - ")[0] ?? "" : "";
     meta.rating = a["score"] ? `${a["score"]}/10 MyAnimeList` : "";
     meta.imageUrl = a["images"]?.jpg?.large_image_url ?? "";
     meta.source = "Jikan (MyAnimeList)"; meta.sourceId = String(a["mal_id"]);
@@ -104,15 +106,32 @@ function mapTmdb(r: J): SearchResult {
   return { key: `tmdb-${r["media_type"]}-${r["id"]}`, meta, label: meta.title, sub: [meta.type, meta.year].filter(Boolean).join(" · "), thumb: r["poster_path"] ? `${IMG}w185${r["poster_path"]}` : "", needsDetails: { kind: r["media_type"], id: String(r["id"]) } };
 }
 
-export async function searchAll(query: string, sources: ("anilist" | "jikan" | "tmdb")[] = ["anilist", "jikan", "tmdb"]): Promise<SearchOutcome> {
+export async function searchAll(query: string, sources: ("anilist" | "jikan" | "tmdb" | "omdb")[] = ["anilist", "jikan", "tmdb", "omdb"]): Promise<SearchOutcome> {
   const q = query.trim();
   if (!q) return { results: [], errors: ["Enter a title to search"], tmdbConfigured: true };
+  if (q.length > 200) return { results: [], errors: ['Title must be 200 characters or fewer.'], tmdbConfigured: true };
+  try { const enabled = await enabledProviders(); sources = sources.filter(s => enabled.includes(s)); }
+  catch { return { results: [], errors: ['Integration settings could not be loaded. Try again shortly.'], tmdbConfigured: false }; }
   const errors: string[] = [];
   let tmdbConfigured = true;
   const jobs = sources.map(async (s) => {
     try {
       if (s === "anilist") return await anilist(q);
       if (s === "jikan") return await jikan(q);
+      if (s === 'omdb') {
+        const r = await searchOmdb({ data: { query: q } });
+        if (r.error) throw new Error(r.error);
+        return (JSON.parse(r.json) as J[]).map(d => {
+          const meta = emptyMeta();
+          const value = (key: string) => d[key] && d[key] !== 'N/A' ? String(d[key]) : '';
+          meta.title = value('Title'); meta.year = value('Year'); meta.releaseDate = value('Released');
+          meta.type = value('Type'); meta.runtime = value('Runtime'); meta.genres = value('Genre');
+          meta.synopsis = value('Plot'); meta.language = value('Language'); meta.ageRating = value('Rated');
+          meta.imdbId = value('imdbID'); meta.rating = value('imdbRating') ? `${value('imdbRating')}/10 IMDb (via OMDb)` : '';
+          meta.source = 'OMDb'; meta.sourceId = meta.imdbId; meta.imageUrl = value('Poster');
+          return { key: `omdb-${meta.imdbId}`, meta, label: meta.title, sub: [meta.type, meta.year].filter(Boolean).join(' · '), thumb: meta.imageUrl };
+        });
+      }
       const r = await searchTmdb({ data: { query: q } });
       tmdbConfigured = r.configured;
       if (r.error) throw new Error(r.error);
@@ -125,7 +144,7 @@ export async function searchAll(query: string, sources: ("anilist" | "jikan" | "
   const lists = await Promise.all(jobs);
   // interleave so each source's best match appears near the top
   const results: SearchResult[] = [];
-  for (let i = 0; i < 8; i++) for (const l of lists) if (l[i]) results.push(l[i]!);
+  for (let i = 0; i < 8; i++) for (const l of lists) { const result = l[i]; if (result) results.push(result); }
   return { results, errors, tmdbConfigured };
 }
 
@@ -136,6 +155,7 @@ export async function resolveResult(r: SearchResult): Promise<Meta> {
   if (!res.json) throw new Error(res.error ?? "Could not load TMDB details");
   const d = JSON.parse(res.json) as J;
   const m = { ...r.meta };
+  m.imdbId = d['imdb_id'] || d['external_ids']?.imdb_id || '';
   const tv = r.needsDetails.kind === "tv";
   m.genres = (d["genres"] ?? []).map((g: J) => g["name"]).join(", ");
   m.status = d["status"] ?? "";

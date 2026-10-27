@@ -1,6 +1,6 @@
 export const META_FIELDS = [
   "title", "altTitle", "type", "year", "releaseDate", "season", "episodes", "seasons", "runtime",
-  "genres", "status", "language", "audio", "studio", "ageRating", "rating", "synopsis",
+  "genres", "status", "language", "audio", "studio", "ageRating", "rating", "synopsis", "imdbId",
 ] as const;
 export type MetaField = (typeof META_FIELDS)[number];
 
@@ -11,7 +11,7 @@ export const META_LABELS: Record<MetaField, string> = {
   releaseDate: "Release date", season: "Season", episodes: "Episodes", seasons: "Seasons",
   runtime: "Runtime / duration", genres: "Genres", status: "Status", language: "Original language",
   audio: "Audio / languages", studio: "Studio / production", ageRating: "Age rating",
-  rating: "Rating (with source)", synopsis: "Synopsis",
+  rating: "Rating (with source)", synopsis: "Synopsis", imdbId: "IMDb identifier (via provider)",
 };
 
 export function emptyMeta(): Meta {
@@ -37,6 +37,7 @@ export interface Layer {
   // text
   text?: string; font?: string; size?: number; weight?: number; italic?: boolean; color?: string;
   align?: "left" | "center" | "right"; letterSpacing?: number; lineHeight?: number; wrap?: boolean;
+  autoFit?: boolean;
   uppercase?: boolean; shadow?: number; shadowColor?: string; outline?: number; outlineColor?: string;
   glow?: number; glowColor?: string; gradientTo?: string | null; highlight?: string | null;
   defaults?: Partial<Layer>;

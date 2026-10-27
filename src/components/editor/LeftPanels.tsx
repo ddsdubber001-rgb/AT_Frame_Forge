@@ -130,9 +130,9 @@ export function MetadataSection({ project, set }: { project: Project; set: Sette
           <label key={f} className="block">
             <span className="label-sm">{META_LABELS[f]}</span>
             {f === "synopsis" ? (
-              <textarea className="field min-h-24" value={project.meta[f]} onChange={(e) => set((p) => ({ ...p, meta: { ...p.meta, [f]: e.target.value } }))} />
+              <textarea className="field min-h-24" value={project.meta[f] ?? ''} onChange={(e) => set((p) => ({ ...p, meta: { ...p.meta, [f]: e.target.value, source: 'Manual input' } }))} />
             ) : (
-              <input className="field" value={project.meta[f]} onChange={(e) => set((p) => ({ ...p, meta: { ...p.meta, [f]: e.target.value } }))} />
+              <input className="field" value={project.meta[f] ?? ''} onChange={(e) => set((p) => ({ ...p, meta: { ...p.meta, [f]: f === 'rating' && e.target.value ? `${e.target.value.replace(/ \(manual input\)$/, '')} (manual input)` : e.target.value, source: 'Manual input' } }))} />
             )}
           </label>
         ))}

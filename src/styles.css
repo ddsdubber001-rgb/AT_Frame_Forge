@@ -36,7 +36,7 @@
 }
 
 :root {
-  --radius: 0.6rem;
+  --radius: 0.5rem;
   --background: oklch(0.13 0.018 262);
   --foreground: oklch(0.97 0.005 260);
   --panel: oklch(0.17 0.022 262);
@@ -45,7 +45,7 @@
   --card-foreground: oklch(0.97 0.005 260);
   --popover: oklch(0.19 0.024 262);
   --popover-foreground: oklch(0.97 0.005 260);
-  --primary: oklch(0.8 0.14 75);
+  --primary: oklch(0.72 0.16 240);
   --primary-foreground: oklch(0.15 0.02 262);
   --secondary: oklch(0.24 0.028 262);
   --secondary-foreground: oklch(0.95 0.005 260);
@@ -58,10 +58,9 @@
   --success: oklch(0.74 0.15 155);
   --border: oklch(1 0 0 / 9%);
   --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.8 0.14 75 / 60%);
+  --ring: oklch(0.72 0.16 240 / 60%);
   --shadow-panel: 0 20px 50px -20px oklch(0 0 0 / 70%);
-  --gradient-hero: radial-gradient(ellipse at 20% 0%, oklch(0.3 0.06 262 / 70%), transparent 60%),
-    radial-gradient(ellipse at 90% 30%, oklch(0.5 0.12 75 / 18%), transparent 55%);
+  --gradient-hero: linear-gradient(180deg, var(--background), var(--stage));
 }
 
 @layer base {
@@ -83,7 +82,7 @@
 }
 @utility btn-primary {
   background: var(--color-primary); color: var(--color-primary-foreground); border-color: transparent;
-  &:hover { background: oklch(0.85 0.13 75); }
+   &:hover { background: color-mix(in oklab, var(--primary) 85%, var(--foreground)); }
 }
 @utility btn-ghost {
   background: transparent; border-color: transparent;

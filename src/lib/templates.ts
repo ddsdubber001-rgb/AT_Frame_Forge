@@ -91,5 +91,61 @@ const split: TemplateDef = {
   },
 };
 
-export const TEMPLATES: TemplateDef[] = [classic, split];
-export const getTemplate = (id: string) => TEMPLATES.find((t) => t.id === id) ?? classic;
+export function logoLayer({ w, h }: Canvas): Layer {
+  const diameter = Math.min(w, h) * 0.09;
+  return img('ANIME TAMILAN logo', { id: 'anime-tamilan-logo', role: 'logo', x: 1 - (diameter + Math.min(w,h) * 0.035) / w,
+    y: Math.min(w,h) * 0.035 / h, w: diameter / w, h: diameter / h, radius: 1, removable: false, fit: 'contain' });
+}
+
+const cinematic: TemplateDef = {
+  id: 'reference-cinematic', name: 'Design 1 — Reference Cinematic', description: 'Wide cinematic artwork, strong title, badges and rounded genre tags.',
+  build({ w, h }) {
+    const land = w > h, x = 0.06, width = land ? 0.82 : 0.88;
+    const y = land ? 0.48 : 0.55, scale = land ? 1 : 0.55;
+    return [
+      img('Cinematic artwork', { role: 'artwork', removable: false, blur: 2 }),
+      rect('Dark cinematic shade', { role: 'overlay', fill: '@bg/0.3', gradTo: '@bg/0.95', gradAngle: 90 }),
+      rect('Text contrast', { role: 'overlay', w: 0.85, fill: '@bg/0.65', gradTo: '@bg/0', gradAngle: 0 }),
+      text('Category', '{type}', { x, y, w: land ? 0.2 : 0.38, h: 0.055*scale, size: 0.025*scale, weight: 800, uppercase: true, highlight: '@accent', color: '@bg', wrap: false }),
+      text('Status', '{status}', { x: land ? 0.29 : 0.5, y, w: land ? 0.24 : 0.4, h: 0.055*scale, size: 0.025*scale, weight: 700, highlight: '@surface', wrap: false }),
+      text('Main title', '{title}', { role: 'title', x, y: y+0.065*scale, w: width, h: 0.17*scale, size: 0.115*scale, font: 'Bebas Neue', lineHeight: 1, autoFit: true }),
+      text('Rating and source', '★ {rating}', { x, y: y+0.25*scale, w: width, h: 0.047*scale, size: 0.031*scale, color: '@accent', weight: 800, wrap: false }),
+      text('Title details', '{year} · {episodes} · {runtime} · {audio}', { x, y: y+0.31*scale, w: width, h: 0.046*scale, size: 0.03*scale, weight: 700, wrap: false }),
+      text('Genre tags', '{genres}', { role: 'genre-tags', x, y: y+0.37*scale, w: width, h: 0.09*scale, size: 0.023*scale, color: '@text', highlight: '@surface' }),
+      rect('Poster callout', { x, y: land ? 0.9 : 0.86, w: land ? 0.26 : 0.56, h: 0.065*scale, fill: '@accent', radius: 0.035*scale }),
+      text('Visual callout', '▶ WATCH NOW', { x: x+0.016, y: land ? 0.905 : 0.863, w: land ? 0.225 : 0.52, h: 0.055*scale, size: 0.028*scale, weight: 800, color: '@bg', align: 'center', wrap: false }),
+    ];
+  },
+};
+const referenceSplit: TemplateDef = {
+  id: 'reference-split', name: 'Design 2 — Reference Split Panel', description: 'Portrait artwork with translucent title and information cards.',
+  build({ w,h }) {
+    const land = w > h;
+    const px = land ? 0.44 : 0.06, pw = land ? 0.52 : 0.88, top = land ? 0.13 : 0.49, s = land ? 1 : 0.55;
+    const titleY = top+0.045*s, cardsY = top+0.32*s;
+    const fields: [MetaField,string][] = [['releaseDate','Release date'],['status','Status'],['type','Type'],['rating','Rating / source']];
+    const layers: Layer[] = [
+      img('Blurred cinematic background', { role: 'background', removable: false, blur: 32, zoom: 1.12 }),
+      rect('Background shade', { fill: '@bg/0.5', gradTo: '@bg/0.75', gradAngle: 0 }),
+      rect('Poster border', { x: land ? 0.035 : 0.215, y: land ? 0.075 : 0.03, w: land ? 0.355 : 0.57, h: land ? 0.85 : 0.415, fill: '@surface', radius: 0.025*s, stroke: '@text/0.25', strokeWidth: 0.0015 }),
+      img('Portrait poster', { role: 'artwork', removable: false, fit: 'contain', x: land ? 0.04 : 0.22, y: land ? 0.08 : 0.035, w: land ? 0.345 : 0.56, h: land ? 0.84 : 0.405, radius: 0.02*s }),
+      text('Genres', '{genres}', { x: px+0.012, y: top-0.063*s, w: pw-0.13, h: 0.045*s, size: 0.021*s, weight: 800, uppercase: true, wrap: false, highlight: '@surface/0.75' }),
+      rect('Title panel', { x: px, y: top, w: pw, h: 0.27*s, fill: '@surface/0.85', radius: 0.015*s }),
+      text('Studio', 'STUDIO · {studio}', { x: px+0.014, y: top+0.008*s, w: pw-0.03, h: 0.033*s, size: 0.021*s, weight: 700, wrap: false }),
+      text('Main title', '{title}', { role:'title', x: px+0.014, y: titleY, w: pw-0.03, h: 0.145*s, size: 0.082*s, font: 'Sora', weight: 800, autoFit: true, lineHeight: 1.05 }),
+      text('Season or subtitle', '{season} · {altTitle}', { x:px+0.014, y:top+0.203*s, w:pw-0.03, h:0.05*s, size:0.032*s, weight:800, wrap:false }),
+      rect('Synopsis card', { x:px+pw*0.47, y:cardsY, w:pw*0.53, h:0.52*s, fill:'@surface/0.85', radius:0.014*s, stroke:'@text/0.25', strokeWidth:0.001, dependsOn:['synopsis'] }),
+      text('Synopsis label','Synopsis', { x:px+pw*0.49, y:cardsY+0.017*s, w:pw*0.49-0.014, h:0.04*s, size:0.025*s, uppercase:true, dependsOn:['synopsis'] }),
+      text('Synopsis','{synopsis}', { x:px+pw*0.49, y:cardsY+0.068*s, w:pw*0.49-0.014, h:0.425*s, size:0.024*s, lineHeight:1.3, autoFit:true }),
+    ];
+    fields.forEach(([field,label],i) => {
+      const y=cardsY+i*0.134*s, width=pw*0.435;
+      layers.push(rect(`${label} card`, { x:px,y,w:width,h:0.118*s,fill:'@surface/0.85',radius:0.014*s,stroke:'@text/0.25',strokeWidth:0.001,dependsOn:[field] }),
+        text(`${label} label`,label,{ x:px+0.012,y:y+0.012*s,w:width-0.024,h:0.034*s,size:0.02*s,uppercase:true,dependsOn:[field],wrap:false }),
+        text(`${label} value`,`{${field}}`,{ x:px+0.012,y:y+0.047*s,w:width-0.024,h:0.061*s,size:0.029*s,weight:800,autoFit:true }));
+    });
+    return layers;
+  },
+};
+export const TEMPLATES: TemplateDef[] = [classic, cinematic, split, referenceSplit].map(template => ({ ...template, build(canvas:Canvas) { return [...template.build(canvas), logoLayer(canvas)]; } }));
+export const getTemplate = (id: string) => TEMPLATES.find((t) => t.id === id) ?? TEMPLATES[0] ?? classic;

@@ -253,7 +253,7 @@ export function ExportSection({ project, set }: { project: Project; set: Setter 
         <label><span className="label-sm">Height</span><input type="number" className="field" min={64} max={8192} value={ep.h} onChange={(e) => up({ h: Math.round(+e.target.value) })} /></label>
       </div>
       <button className="btn w-full" onClick={() => up({ h: Math.round(ep.w / ca) })}>Match canvas shape</button>
-      {mismatch && <p className="text-xs text-primary">This size has a different shape than the canvas — layout will be re-flowed. Use “Match canvas shape” to keep proportions.</p>}
+      {mismatch && <p className="text-xs text-primary">This size has a different shape than the canvas — the complete design will be centred with margins, without stretching. Match canvas shape to fill the image.</p>}
       {ep.format !== "png" && <Slider label="Quality" value={ep.quality} min={0.5} max={1} onChange={(v) => up({ quality: v })} fmt={pct} />}
       {ep.format !== "jpeg" && (
         <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={ep.transparent} onChange={(e) => up({ transparent: e.target.checked })} className="accent-primary" />Transparent background (removes blurred background layer)</label>

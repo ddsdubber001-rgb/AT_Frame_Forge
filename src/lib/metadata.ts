@@ -5,7 +5,7 @@ import { searchOmdb } from './omdb.functions';
 
 /** Metadata service: AniList + Jikan (anime, public) and TMDB (movies/TV, server-side key). */
 
-export interface SearchResult { key: string; meta: Meta; label: string; sub: string; thumb: string; needsDetails?: { kind: string; id: string } }
+export interface SearchResult { key: string; meta: Meta; label: string; sub: string; thumb: string; needsDetails?: { kind: 'movie' | 'tv'; id: string } }
 export interface SearchOutcome { results: SearchResult[]; errors: string[]; tmdbConfigured: boolean }
 
 type J = Record<string, any>;
@@ -103,7 +103,7 @@ function mapTmdb(r: J): SearchResult {
   meta.rating = r["vote_count"] > 0 && r["vote_average"] ? `${Number(r["vote_average"]).toFixed(1)}/10 TMDB` : "";
   meta.imageUrl = r["poster_path"] ? `${IMG}w780${r["poster_path"]}` : "";
   meta.source = "TMDB"; meta.sourceId = `${r["media_type"]}-${r["id"]}`;
-  return { key: `tmdb-${r["media_type"]}-${r["id"]}`, meta, label: meta.title, sub: [meta.type, meta.year].filter(Boolean).join(" · "), thumb: r["poster_path"] ? `${IMG}w185${r["poster_path"]}` : "", needsDetails: { kind: r["media_type"], id: String(r["id"]) } };
+  return { key: `tmdb-${r["media_type"]}-${r["id"]}`, meta, label: meta.title, sub: [meta.type, meta.year].filter(Boolean).join(" · "), thumb: r["poster_path"] ? `${IMG}w185${r["poster_path"]}` : "", needsDetails: { kind: tv ? 'tv' : 'movie', id: String(r["id"]) } };
 }
 
 export async function searchAll(query: string, sources: ("anilist" | "jikan" | "tmdb" | "omdb")[] = ["anilist", "jikan", "tmdb", "omdb"]): Promise<SearchOutcome> {

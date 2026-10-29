@@ -23,7 +23,7 @@
 | Raw keys/hash/password in frontend responses | PASS by source review | Settings returns only credential presence; bcrypt hash server-only, no browser key input/storage path |
 | Unauthorized add/update/remove secrets | PASS by architecture review | No application endpoint can write hosting secrets; hosting project access required |
 | Credential add/update/remove | NOT TESTED | Hosting workflow only; no provider keys supplied |
-| Settings/profile persist refresh | NOT TESTED | Session refresh tested; editing settings/profile still needs a read-back check |
+| Settings/profile persist refresh | PASS | Changed profile and OMDb enable flag, read both back, restored originals and refreshed disabled flag |
 | Persistence across server restart | NOT TESTED | Durable database implemented; no intentional restart performed |
 | AniList/Jikan title search | PASS | Live Naruto search, selection and populated metadata |
 | TMDB/OMDb with valid or expired key | NOT TESTED | Provider credentials unavailable |
@@ -38,7 +38,7 @@
 | Tamil, English, Japanese | PASS | Mixed-script title visibly rendered in previews and actual export |
 | Long titles / many image ratios | PARTIAL | Auto-fit implemented; mixed-script title and landscape artwork verified, exhaustive extremes not tested |
 | Browser project save/reopen | PASS | Reload retained manual title correction |
-| Batch creation / ZIP | NOT TESTED | Existing implementation retained; gallery exposes all four variants |
+| Batch creation / ZIP | PASS | Blue Box upload, live metadata lookup and actual ZIP download completed |
 | Desktop / phone | PASS | Desktop flow and 390×844 phone preview checked visually |
 | Tablet | NOT TESTED | No dedicated tablet run |
 | Console errors | PASS | Zero page errors in completed browser flow |
@@ -53,4 +53,4 @@
 `src/lib/templates.ts`, `src/lib/types.ts`, `src/lib/project.ts`, `src/lib/renderer.ts`, `src/lib/exporter.ts`, `src/lib/metadata.ts`, `src/lib/tmdb.functions.ts`, `src/components/editor/LeftPanels.tsx`, `src/components/editor/RightPanels.tsx`, `src/routes/index.tsx`, `src/styles.css`, `AGENTS.md`, package manifest/lockfile; Cloud-generated integration/configuration files and generated route tree/types.
 
 ## Known limitations
-Hosting secrets, not this dashboard, own credential writes. Provider tests with real keys, restart persistence, batch ZIP and exhaustive layout extremes remain unverified. The first admin hash initializes when login is attempted; remove the bootstrap secret after confirming login. The original logo has finite source detail. Reference layouts follow the supplied composition, not copied title-specific facts or artwork. The app remains unpublished and cannot run securely as GitHub Pages alone.
+Hosting secrets, not this dashboard, own credential writes. Provider tests with real keys, restart persistence and exhaustive layout extremes remain unverified. The first admin hash initializes when login is attempted; remove the bootstrap secret after confirming login in the intended deployment. The original logo has finite source detail. Reference layouts follow the supplied composition, not copied title-specific facts or artwork. The app remains unpublished and cannot run securely as GitHub Pages alone.

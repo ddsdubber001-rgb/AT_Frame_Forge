@@ -12,7 +12,7 @@ Lovable performs its production build automatically. Publish through Lovable aft
 ## Admin credential setup
 The initial credential was stored through encrypted hosting secrets. First login initializes a cost-12 bcrypt salted hash in a service-only table. Admin identity has a separate display-name profile; it is not a public user account. No public registration was added.
 
-Every settings/profile/test operation validates an encrypted HttpOnly, Secure, SameSite=Strict cookie with a one-hour lifetime. An atomic durable counter limits attempts to five per IP bucket every fifteen minutes. Unknown IPs share a bucket. CSRF middleware protects server functions. Additional production WAF limits are advisable against distributed attacks. There is no password-change/recovery interface in this version.
+Every settings/profile/test operation validates an encrypted HttpOnly, Secure, SameSite=None, Partitioned cookie with a one-hour lifetime. Partitioning supports cross-site editor previews without sharing a session between embedding sites; browsers that block all cookies still require cookies to be allowed. CSRF middleware remains enabled. An atomic durable counter limits attempts to five per IP bucket every fifteen minutes. Unknown IPs share a bucket. Additional production WAF limits are advisable against distributed attacks. There is no password-change/recovery interface in this version.
 
 After a successful first login, remove `ADMIN_INITIAL_PASSWORD` from hosting secrets. Keep `ADMIN_SESSION_SECRET`; rotating it invalidates all sessions. Never publish the password or its hash.
 
@@ -22,6 +22,7 @@ After a successful first login, remove `ADMIN_INITIAL_PASSWORD` from hosting sec
 | `ADMIN_INITIAL_PASSWORD` | Initial credential bootstrap only |
 | `ADMIN_SESSION_SECRET` | Strong session encryption secret, securely generated during setup |
 | `TMDB_API_KEY` | TMDB v3 API key or API read-access token |
+| `TMDB_READ_ACCESS_TOKEN` | Preferred TMDB read-access token; the existing configured name is supported by both connection tests and metadata search |
 | `OMDB_API_KEY` | Optional OMDb provider key |
 
 Lovable Cloud supplies database environment configuration automatically. `.env.example` contains placeholders only. Never put private values in `VITE_` variables, GitHub files, URLs delivered to the browser or browser storage.

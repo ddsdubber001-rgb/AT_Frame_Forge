@@ -1,19 +1,27 @@
 import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
-import { adminDb, adminSession, loginAdmin, providerEnabled, requireAdmin, safeFetch } from './admin.server';
+import { adminDb, adminSession, loginAdmin, providerCredential, providerEnabled, requireAdmin, safeFetch } from './admin.server';
 import { PROVIDERS } from './admin-policy';
 const id = z.enum(['anilist', 'jikan', 'tmdb', 'omdb']);
 export const adminLogin = createServerFn({ method: 'POST' }).inputValidator(z.object({ password: z.string().min(1).max(128) })).handler(({ data }) => loginAdmin(data.password));
 export const adminState = createServerFn({ method: 'GET' }).handler(async () => {
-  try { await requireAdmin(); return { authenticated: true }; } catch { return { authenticated: false }; }
+  if (!process.env['ADMIN_SESSION_SECRET']) return { authenticated: false, error: 'ADMIN_SESSION_SECRET is missing from hosting secrets.' };
+  try { await requireAdmin(); return { authenticated: true, error: null }; } catch { return { authenticated: false, error: null }; }
 });
 export const adminLogout = createServerFn({ method: 'POST' }).handler(async () => { const session = await adminSession(); await session.clear(); return { ok: true }; });
 export const adminSettings = createServerFn({ method: 'GET' }).handler(async () => {
   await requireAdmin();
   const db = await adminDb();
-  const { data: profile } = await db.from('forge_admin_profile').select('display_name').eq('id','admin').maybeSingle();
-  const providers = [];
-  for (const p of PROVIDERS) providers.push({ ...p, enabled: await providerEnabled(p.id), configured: p.secret ? Boolean(process.env[p.secret]) : true });
+  const [profileResult, integrationsResult] = await Promise.all([
+    db.from('forge_admin_profile').select('display_name').eq('id','admin').maybeSingle(),
+    db.from('forge_integrations').select('id, enabled'),
+  ]);
+  if (profileResult.error || integrationsResult.error) throw new Error('Admin settings could not be read. Check the admin database configuration.');
+  const profile = profileResult.data;
+  const providers = PROVIDERS.map(p => ({ ...p,
+    enabled: integrationsResult.data?.find(row => row.id === p.id)?.enabled ?? p.defaultEnabled,
+    configured: p.secret ? Boolean(providerCredential(p.id)) : true,
+  }));
   return { providers, displayName: profile?.display_name ?? 'Administrator' };
 });
 export const setIntegration = createServerFn({ method: 'POST' }).inputValidator(z.object({ id, enabled: z.boolean() })).handler(async ({ data }) => {
@@ -33,7 +41,7 @@ export const testIntegration = createServerFn({ method: 'POST' }).inputValidator
     if (data.id === 'anilist') await safeFetch('https://graphql.anilist.co', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: '{Media(id:1){id}}' }) });
     if (data.id === 'jikan') await safeFetch('https://api.jikan.moe/v4/anime/1');
     if (data.id === 'tmdb') {
-      const key = process.env['TMDB_API_KEY']; if (!key) return { ok: false, message: 'Configure TMDB_API_KEY in hosting secrets.' };
+       const key = providerCredential('tmdb'); if (!key) return { ok: false, message: 'Configure TMDB_READ_ACCESS_TOKEN or TMDB_API_KEY in hosting secrets.' };
       const bearer = key.length > 60;
       await safeFetch(`https://api.themoviedb.org/3/configuration${bearer ? '' : '?api_key=' + encodeURIComponent(key)}`, { headers: bearer ? { Authorization: `Bearer ${key}` } : {} });
     }

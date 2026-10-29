@@ -5,3 +5,4 @@
 - [x] Hacker UI without changing poster palettes
 - [x] Practical export/editor/security tests and deployment report
 - [ ] Live TMDB/OMDb credential tests — waiting for provider keys in hosting secrets
+- [ ] Repair embedded admin sessions, settings/profile feedback and existing TMDB token resolution; verify browser flows and report results.

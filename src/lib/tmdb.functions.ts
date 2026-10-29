@@ -1,12 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from 'zod';
-import { providerEnabled } from './admin.server';
+import { providerCredential, providerEnabled } from './admin.server';
 
 type Json = Record<string, unknown>;
 
 async function tmdb(path: string): Promise<Json | null> {
   if (!(await providerEnabled('tmdb'))) return null;
-  const key = process.env["TMDB_API_KEY"];
+  const key = providerCredential('tmdb');
   if (!key) return null;
   const bearer = key.length > 60;
   const url = `https://api.themoviedb.org/3${path}${path.includes("?") ? "&" : "?"}${bearer ? "" : `api_key=${encodeURIComponent(key)}`}`;

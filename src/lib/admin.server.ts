@@ -1,7 +1,7 @@
 import { hash, compare } from 'bcryptjs';
 import { createHash } from 'node:crypto';
 import { useSession, getRequestIP } from '@tanstack/react-start/server';
-import { ADMIN_SESSION_SECONDS, PROVIDERS, type ProviderId } from './admin-policy';
+import { ADMIN_COOKIE_OPTIONS, ADMIN_SESSION_SECONDS, PROVIDERS, type ProviderId } from './admin-policy';
 
 export async function adminDb() {
   const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
@@ -11,7 +11,7 @@ export async function adminSession() {
   const password = process.env['ADMIN_SESSION_SECRET'];
   if (!password) throw new Error('Admin sessions need hosting configuration.');
   return useSession<{ admin?: boolean; authenticatedAt?: number }>({ password, name: 'forge-admin', maxAge: ADMIN_SESSION_SECONDS,
-    cookie: { httpOnly: true, secure: true, sameSite: 'strict', path: '/' } });
+    cookie: ADMIN_COOKIE_OPTIONS });
 }
 export async function requireAdmin() {
   const session = await adminSession();
@@ -47,6 +47,12 @@ export async function providerEnabled(id: ProviderId) {
   const { data, error } = await db.from('forge_integrations').select('enabled').eq('id', id).maybeSingle();
   if (error) throw new Error('Integration settings unavailable.');
   return data?.enabled ?? PROVIDERS.find(p => p.id === id)?.defaultEnabled ?? false;
+}
+// Secret values stay server-only; callers receive only configuration booleans.
+export function providerCredential(id: ProviderId) {
+  if (id === 'tmdb') return process.env['TMDB_READ_ACCESS_TOKEN'] || process.env['TMDB_API_KEY'];
+  if (id === 'omdb') return process.env['OMDB_API_KEY'];
+  return undefined;
 }
 export async function safeFetch(url: string, init?: RequestInit) {
   const response = await fetch(url, { ...init, signal: AbortSignal.timeout(12000) });

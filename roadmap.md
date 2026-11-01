@@ -6,6 +6,6 @@
 - [x] Practical export/editor/security tests and deployment report
 - [x] Live TMDB connection validation and metadata search using existing hosting token
 - [ ] Live OMDb connection success — configured key returns HTTP 401 / Invalid API key; requires an activated valid OMDb key
-- [ ] Repair OMDb response handling and verify real dashboard failure diagnostics without exposing credentials
+- [x] Repair OMDb response handling and verify real dashboard failure diagnostics without exposing credentials
 - [x] Repair embedded admin sessions, settings/profile feedback and existing TMDB token resolution; verify browser flows and report results.
 - [ ] Dashboard credential writes — hosting has no application-accessible secret-store write integration; use project Settings → Secrets.

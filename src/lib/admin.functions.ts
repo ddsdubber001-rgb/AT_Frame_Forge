@@ -2,6 +2,7 @@ import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
 import { adminDb, adminSession, loginAdmin, providerCredential, providerEnabled, requireAdmin, safeFetch } from './admin.server';
 import { PROVIDERS } from './admin-policy';
+import { requestOmdb } from './omdb.server';
 const id = z.enum(['anilist', 'jikan', 'tmdb', 'omdb']);
 export const adminLogin = createServerFn({ method: 'POST' }).inputValidator(z.object({ password: z.string().min(1).max(128) })).handler(({ data }) => loginAdmin(data.password));
 export const adminState = createServerFn({ method: 'GET' }).handler(async () => {
@@ -46,9 +47,8 @@ export const testIntegration = createServerFn({ method: 'POST' }).inputValidator
       await safeFetch(`https://api.themoviedb.org/3/configuration${bearer ? '' : '?api_key=' + encodeURIComponent(key)}`, { headers: bearer ? { Authorization: `Bearer ${key}` } : {} });
     }
     if (data.id === 'omdb') {
-      const key = process.env['OMDB_API_KEY']; if (!key) return { ok: false, message: 'Configure OMDB_API_KEY in hosting secrets.' };
-      const result = await safeFetch(`https://www.omdbapi.com/?apikey=${encodeURIComponent(key)}&i=tt0111161`);
-      if (result.Response !== 'True') return { ok: false, message: 'OMDb credentials rejected or provider unavailable.' };
+      const result = await requestOmdb({ i: 'tt0111161' });
+      return { ok: result.ok, message: result.message };
     }
     return { ok: true, message: 'Connection verified.' };
   } catch { return { ok: false, message: 'Connection failed. Check credentials, provider availability or rate limits.' }; }

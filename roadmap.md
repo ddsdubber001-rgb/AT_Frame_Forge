@@ -5,6 +5,7 @@
 - [x] Hacker UI without changing poster palettes
 - [x] Practical export/editor/security tests and deployment report
 - [x] Live TMDB connection validation and metadata search using existing hosting token
-- [ ] Live OMDb credential test — waiting for OMDB_API_KEY in hosting secrets
+- [ ] Live OMDb connection success — configured key returns HTTP 401 / Invalid API key; requires an activated valid OMDb key
+- [x] Repair OMDb response handling and verify real dashboard failure diagnostics without exposing credentials
 - [x] Repair embedded admin sessions, settings/profile feedback and existing TMDB token resolution; verify browser flows and report results.
 - [ ] Dashboard credential writes — hosting has no application-accessible secret-store write integration; use project Settings → Secrets.

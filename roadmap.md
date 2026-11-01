@@ -1,4 +1,5 @@
 # AT Frame Forge update
+- [ ] Diagnose and repair independent metadata searches; verify live TMDB, OMDb, AniList and Jikan responses and exact-result selection.
 - [x] Secure password admin, profile, durable integration settings, hosting secret workflow
 - [x] Optional IMDb-related provider and source attribution
 - [x] Original logo in renderer and four working templates

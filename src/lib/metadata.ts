@@ -137,7 +137,7 @@ export async function searchAll(query: string, sources: ("anilist" | "jikan" | "
       if (r.error) throw new Error(r.error);
       return (JSON.parse(r.json) as J[]).map(mapTmdb);
     } catch (e) {
-      errors.push(`${s === "anilist" ? "AniList" : s === "jikan" ? "Jikan" : "TMDB"}: ${(e as Error).message || "unavailable"}`);
+      errors.push(`${s === "anilist" ? "AniList" : s === "jikan" ? "Jikan" : s === "omdb" ? "OMDb" : "TMDB"}: ${(e as Error).message || "unavailable"}`);
       return [];
     }
   });

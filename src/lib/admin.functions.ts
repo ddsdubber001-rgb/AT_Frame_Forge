@@ -47,7 +47,8 @@ export const testIntegration = createServerFn({ method: 'POST' }).inputValidator
     }
     if (data.id === 'tmdb') {
       const result = await requestTmdb('/search/multi?include_adult=false&query=Naruto');
-      return { ok: result.ok && Array.isArray(result.data['results']), message: result.message };
+      if (result.ok && !Array.isArray(result.data['results'])) return { ok: false, message: `HTTP ${result.status}: unexpected TMDB search response.` };
+      return { ok: result.ok, message: result.message };
     }
     if (data.id === 'omdb') {
       const result = await requestOmdb({ i: 'tt0111161' });

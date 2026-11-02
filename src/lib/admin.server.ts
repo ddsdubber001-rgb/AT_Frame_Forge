@@ -50,7 +50,7 @@ export async function providerEnabled(id: ProviderId) {
 }
 // Secret values stay server-only; callers receive only configuration booleans.
 export function providerCredential(id: ProviderId) {
-  if (id === 'tmdb') return process.env['TMDB_READ_ACCESS_TOKEN'] || process.env['TMDB_API_KEY'];
+  if (id === 'tmdb') return process.env['TMDB_READ_ACCESS_TOKEN']?.trim() || process.env['TMDB_API_KEY']?.trim();
   if (id === 'omdb') return process.env['OMDB_API_KEY'];
   return undefined;
 }

@@ -13,6 +13,8 @@
 - Admin is a single server-owned password identity with a service-only profile, bcrypt hash, encrypted expiring cookie and durable atomic login limiter; never use browser storage to authorize admin work.
 - Admin cookies are Secure, HttpOnly, SameSite=None and Partitioned so embedded previews can retain sessions; keep server-function CSRF checks enabled.
 - Resolve TMDB credentials through the server-only provider resolver for both metadata and connection tests so configuration status and requests cannot diverge.
+- Anime requests use same-origin server functions and shared server-only adapters; each provider returns safe diagnostics independently so browser network restrictions and one outage do not suppress other results.
+- Batch metadata stays unconfirmed until a provider-qualified result is explicitly selected, preventing unrelated first-match substitution.
 - Use the shared server-only OMDb adapter for metadata and connection tests; parse error JSON before classifying HTTP failures and return only safe diagnostics and allowlisted metadata so credentials cannot leak through provider responses.
 - Provider credentials are hosting secrets; the dashboard only manages durable enable flags and tests connections, because the runtime cannot write the hosting secret store.
 - Templates store independently editable layer arrays keyed by template ID; inject the default logo for legacy projects without rewriting their original layers.

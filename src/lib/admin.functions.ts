@@ -1,8 +1,10 @@
 import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
-import { adminDb, adminSession, loginAdmin, providerCredential, providerEnabled, requireAdmin, safeFetch } from './admin.server';
+import { adminDb, adminSession, loginAdmin, providerCredential, providerEnabled, requireAdmin } from './admin.server';
 import { PROVIDERS } from './admin-policy';
 import { requestOmdb } from './omdb.server';
+import { requestTmdb } from './tmdb.server';
+import { requestAnime } from './anime.server';
 const id = z.enum(['anilist', 'jikan', 'tmdb', 'omdb']);
 export const adminLogin = createServerFn({ method: 'POST' }).inputValidator(z.object({ password: z.string().min(1).max(128) })).handler(({ data }) => loginAdmin(data.password));
 export const adminState = createServerFn({ method: 'GET' }).handler(async () => {
@@ -39,12 +41,14 @@ export const testIntegration = createServerFn({ method: 'POST' }).inputValidator
   await requireAdmin();
   try {
     if (!(await providerEnabled(data.id))) return { ok: false, message: 'Integration is disabled.' };
-    if (data.id === 'anilist') await safeFetch('https://graphql.anilist.co', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: '{Media(id:1){id}}' }) });
-    if (data.id === 'jikan') await safeFetch('https://api.jikan.moe/v4/anime/1');
+    if (data.id === 'anilist' || data.id === 'jikan') {
+      const result = await requestAnime(data.id, 'Naruto');
+      return { ok: result.ok, message: result.message };
+    }
     if (data.id === 'tmdb') {
-       const key = providerCredential('tmdb'); if (!key) return { ok: false, message: 'Configure TMDB_READ_ACCESS_TOKEN or TMDB_API_KEY in hosting secrets.' };
-      const bearer = key.length > 60;
-      await safeFetch(`https://api.themoviedb.org/3/configuration${bearer ? '' : '?api_key=' + encodeURIComponent(key)}`, { headers: bearer ? { Authorization: `Bearer ${key}` } : {} });
+      const result = await requestTmdb('/search/multi?include_adult=false&query=Naruto');
+      if (result.ok && !Array.isArray(result.data['results'])) return { ok: false, message: `HTTP ${result.status}: unexpected TMDB search response.` };
+      return { ok: result.ok, message: result.message };
     }
     if (data.id === 'omdb') {
       const result = await requestOmdb({ i: 'tt0111161' });

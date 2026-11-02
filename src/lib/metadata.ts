@@ -1,6 +1,6 @@
 import { searchTmdb, tmdbDetails } from "./tmdb.functions";
+import { searchAnime } from "./anime.functions";
 import { emptyMeta, type Meta } from "./types";
-import { enabledProviders } from './admin.functions';
 import { searchOmdb } from './omdb.functions';
 
 /** Metadata service: AniList + Jikan (anime, public) and TMDB (movies/TV, server-side key). */
@@ -14,29 +14,13 @@ const pad = (n: number) => String(n).padStart(2, "0");
 const plural = (n: number | null | undefined, w: string) => (n ? `${n} ${w}${n === 1 ? "" : "s"}` : "");
 const stripHtml = (s: string) => s.replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "").replace(/\n{3,}/g, "\n\n").trim();
 
-async function fetchJson(url: string, init?: RequestInit, timeout = 12000) {
-  const ctl = new AbortController();
-  const t = setTimeout(() => ctl.abort(), timeout);
-  try {
-    const r = await fetch(url, { ...init, signal: ctl.signal });
-    if (r.status === 429) throw new Error("rate limited, please wait a moment");
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    return (await r.json()) as J;
-  } catch (e) {
-    if ((e as Error).name === "AbortError") throw new Error("request timed out");
-    throw e;
-  } finally { clearTimeout(t); }
-}
-
-const ANILIST_Q = `query($q:String){Page(perPage:8){media(search:$q,type:ANIME,sort:SEARCH_MATCH){id title{romaji english native} synonyms startDate{year month day} season seasonYear episodes duration format status genres description(asHtml:false) studios(isMain:true){nodes{name}} averageScore isAdult coverImage{extraLarge large}}}}`;
 const FORMAT: Record<string, string> = { TV: "Anime Series", TV_SHORT: "Anime Series (short)", MOVIE: "Anime Movie", OVA: "OVA", ONA: "ONA", SPECIAL: "Special", MUSIC: "Music video" };
 const STATUS: Record<string, string> = { FINISHED: "Finished", RELEASING: "Airing", NOT_YET_RELEASED: "Upcoming", CANCELLED: "Cancelled", HIATUS: "On hiatus" };
 
 async function anilist(q: string): Promise<SearchResult[]> {
-  const j = await fetchJson("https://graphql.anilist.co", {
-    method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify({ query: ANILIST_Q, variables: { q } }),
-  });
+  const result = await searchAnime({ data: { provider: 'anilist', query: q } });
+  if (result.error) throw new Error(result.error);
+  const j = JSON.parse(result.json) as J;
   return ((j["data"]?.Page?.media ?? []) as J[]).map((m) => {
     const meta = emptyMeta();
     meta.title = m["title"]?.english || m["title"]?.romaji || "";
@@ -60,7 +44,9 @@ async function anilist(q: string): Promise<SearchResult[]> {
 }
 
 async function jikan(q: string): Promise<SearchResult[]> {
-  const j = await fetchJson(`https://api.jikan.moe/v4/anime?limit=8&sfw=true&q=${encodeURIComponent(q)}`);
+  const result = await searchAnime({ data: { provider: 'jikan', query: q } });
+  if (result.error) throw new Error(result.error);
+  const j = JSON.parse(result.json) as J;
   return ((j["data"] ?? []) as J[]).map((a) => {
     const meta = emptyMeta();
     meta.title = a["title_english"] || a["title"] || "";
@@ -110,8 +96,6 @@ export async function searchAll(query: string, sources: ("anilist" | "jikan" | "
   const q = query.trim();
   if (!q) return { results: [], errors: ["Enter a title to search"], tmdbConfigured: true };
   if (q.length > 200) return { results: [], errors: ['Title must be 200 characters or fewer.'], tmdbConfigured: true };
-  try { const enabled = await enabledProviders(); sources = sources.filter(s => enabled.includes(s)); }
-  catch { return { results: [], errors: ['Integration settings could not be loaded. Try again shortly.'], tmdbConfigured: false }; }
   const errors: string[] = [];
   let tmdbConfigured = true;
   const jobs = sources.map(async (s) => {
@@ -137,7 +121,8 @@ export async function searchAll(query: string, sources: ("anilist" | "jikan" | "
       if (r.error) throw new Error(r.error);
       return (JSON.parse(r.json) as J[]).map(mapTmdb);
     } catch (e) {
-      errors.push(`${s === "anilist" ? "AniList" : s === "jikan" ? "Jikan" : s === "omdb" ? "OMDb" : "TMDB"}: ${(e as Error).message || "unavailable"}`);
+      const message = e instanceof Error && /^(HTTP \d{3}:|Request timed out|Network request failed|Integration settings could not|Integration is disabled|Configure TMDB|OMDb |TMDB rate limit)/.test(e.message) ? e.message : "Search service could not be reached. Try again shortly.";
+      errors.push(`${s === "anilist" ? "AniList" : s === "jikan" ? "Jikan" : s === "omdb" ? "OMDb" : "TMDB"}: ${message}`);
       return [];
     }
   });

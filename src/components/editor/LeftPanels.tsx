@@ -72,11 +72,12 @@ export function MetadataSection({ project, set }: { project: Project; set: Sette
 
   const search = async () => {
     setBusy(true); setErrors([]); setNote(null);
-    const out = await searchAll(q);
-    setResults(out.results); setErrors(out.errors);
-    if (!out.tmdbConfigured) setNote("Movies & TV search needs a TMDB key (see README). Anime search works without one.");
-    if (!out.results.length && !out.errors.length) setNote("No matches found. Try another spelling or enter details manually.");
-    setBusy(false);
+    try {
+      const out = await searchAll(q);
+      setResults(out.results); setErrors(out.errors);
+      if (!out.results.length && !out.errors.length) setNote("No matches found. Try another spelling or enter details manually.");
+    } catch { setResults([]); setErrors(['Search service could not be reached. Try again shortly.']); }
+    finally { setBusy(false); }
   };
   const pick = async (r: SearchResult) => {
     setBusy(true);

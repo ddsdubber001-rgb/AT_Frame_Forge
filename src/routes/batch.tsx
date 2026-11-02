@@ -26,8 +26,8 @@ export const Route = createFileRoute("/batch")({
   component: Batch,
 });
 
-type Status = "pending" | "searching" | "ready" | "failed";
-interface Item { id: string; project: Project; title: string; status: Status; error?: string | undefined; results: SearchResult[]; thumb?: string | undefined }
+type Status = "pending" | "searching" | "review" | "ready" | "failed";
+interface Item { id: string; project: Project; title: string; status: Status; selectedKey?: string; error?: string | undefined; results: SearchResult[]; thumb?: string | undefined }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -76,7 +76,7 @@ function Batch() {
   const applyResult = async (it: Item, r: SearchResult) => {
     const meta = await resolveResult(r);
     const project = { ...it.project, meta, name: meta.title || it.project.name };
-    return { ...it, project, status: "ready" as Status, error: undefined, thumb: await thumb(project) };
+    return { ...it, project, selectedKey: r.key, status: "ready" as Status, thumb: await thumb(project) };
   };
 
   const fetchOne = async (it: Item) => {
@@ -86,10 +86,7 @@ function Batch() {
       upd(it.id, (x) => ({ ...x, status: "failed", results: [], error: out.errors.join("; ") || "No match found" }));
       return;
     }
-    try {
-      const next = await applyResult({ ...it, results: out.results }, out.results[0]!);
-      upd(it.id, () => next);
-    } catch (e) { upd(it.id, (x) => ({ ...x, status: "failed", error: (e as Error).message })); }
+    upd(it.id, x => ({ ...x, results: out.results, selectedKey: undefined, status: 'review', error: out.errors.join('; ') || undefined }));
   };
 
   const fetchAll = async () => {
@@ -178,11 +175,13 @@ function Batch() {
                 <div className="min-w-0 flex-1 space-y-2">
                   <input className="field" value={it.title} onChange={(e) => upd(it.id, (x) => ({ ...x, title: e.target.value, status: x.status === "ready" ? "ready" : "pending" }))} aria-label="Title" />
                   <p className={`text-xs ${it.status === "failed" ? "text-destructive" : it.status === "ready" ? "text-success" : "text-muted-foreground"}`}>
-                    {it.status === "searching" ? "Searching…" : it.status === "ready" ? `✓ ${it.project.meta.source}` : it.status === "failed" ? it.error : "Waiting"}
+                    {it.status === "searching" ? "Searching…" : it.status === "ready" ? `✓ ${it.project.meta.source}` : it.status === "failed" ? it.error : it.status === 'review' ? 'Choose a matching title' : "Waiting"}
                   </p>
-                  {it.results.length > 1 && (
-                    <select className="field text-xs" value={it.results.find((r) => r.meta.sourceId === it.project.meta.sourceId)?.key ?? ""}
+                  {it.error && it.status !== 'failed' && <p className="text-xs text-destructive">{it.error}</p>}
+                  {it.results.length > 0 && (
+                    <select aria-label="Matching title" className="field text-xs" value={it.selectedKey ?? ""}
                       onChange={async (e) => { const r = it.results.find((x) => x.key === e.target.value); if (r) { try { const n = await applyResult(it, r); upd(it.id, () => n); } catch (er) { setErrs([(er as Error).message]); } } }}>
+                      <option value="" disabled>Choose a matching title</option>
                       {it.results.map((r) => <option key={r.key} value={r.key}>{r.label} ({r.sub}, {r.meta.source.split(" ")[0]})</option>)}
                     </select>
                   )}

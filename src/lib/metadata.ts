@@ -1,7 +1,6 @@
 import { searchTmdb, tmdbDetails } from "./tmdb.functions";
 import { searchAnime } from "./anime.functions";
 import { emptyMeta, type Meta } from "./types";
-import { enabledProviders } from './admin.functions';
 import { searchOmdb } from './omdb.functions';
 
 /** Metadata service: AniList + Jikan (anime, public) and TMDB (movies/TV, server-side key). */
